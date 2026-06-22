@@ -1,0 +1,43 @@
+# Python caches and local environments
+__pycache__/
+*.py[cod]
+*.pyo
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.venv/
+venv/
+env/
+
+# IDE and local tool state
+.idea/
+.vscode/
+.superpowers/
+
+# Data, trained weights, and generated outputs
+data/*
+!data/README_data.txt
+all/
+all_experiment_results*/
+all_result_final/
+results/
+results_enhanced/
+sdgcf_tuning_results/
+tcn_dgcf_graph_tuning/
+*.pt
+*.pth
+*.ckpt
+*.npy
+*.npz
+
+# Manuscript/reference artifacts
+docs/
+references/
+
+# Logs and temporary files
+*.log
+*.tmp
+*.bak
+*.swp
+.DS_Store
+Thumbs.db
