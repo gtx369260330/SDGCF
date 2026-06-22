@@ -26,5 +26,5 @@ else:
     except Exception as exc:
         print("Result: CUDA is visible but kernel execution failed.")
         print("Error:", repr(exc))
-        print("Recommended immediate fix: run with --device cpu or run_full_pipeline_cpu.bat.")
+        print("Recommended immediate fix: run with --device cpu.")
         print("For GPU acceleration: install a PyTorch CUDA version that supports this GPU's compute capability, or use a newer GPU.")

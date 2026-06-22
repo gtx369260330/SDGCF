@@ -3,7 +3,6 @@ from __future__ import annotations
 
 import argparse
 import shutil
-import subprocess
 import sys
 import traceback
 from contextlib import contextmanager
@@ -18,7 +17,6 @@ import torch
 from config import Config, apply_comparison_model_training_preset, get_comparison_model_training_preset
 from evaluate import test_model
 from model_naming import CANONICAL_MODEL_DISPLAY_NAME, CANONICAL_MODEL_KEY, display_model_name
-from robustness_visualize import generate_robustness_figures
 from train import _select_device, train_model
 from utils import get_checkpoint_path, save_json
 from classical_baselines import get_classical_training_policy, is_classical_baseline
@@ -211,15 +209,6 @@ def copy_compact_outputs(result_dir: Path, summary_dir: Path, model_name: str) -
             shutil.copy2(source, compact_dir / source.name)
 
 
-def run_figure_subprocess(root_dir: Path, model_name: str | None = None, summary_only: bool = False) -> None:
-    command = [sys.executable, str(Path(__file__).resolve().parent / "generate_figures_cli.py"), "--root_dir", str(root_dir)]
-    if model_name is not None:
-        command.extend(["--model", model_name])
-    if summary_only:
-        command.append("--summary_only")
-    subprocess.run(command, check=True)
-
-
 def run_one_model(model_name: str, args, root_dir: Path):
     result_dir = root_dir / f"{model_name}_result"
     cfg = make_cfg(args, result_dir, model_name)
@@ -255,8 +244,6 @@ def run_one_model(model_name: str, args, root_dir: Path):
     else:
         train_model(cfg, model_name=model_name, device_str=args.device)
     metrics = test_model(cfg, model_name=model_name, device_str=args.device)
-    if args.with_figures:
-        run_figure_subprocess(root_dir, model_name=model_name)
     return metrics_to_row(model_name, result_dir, metrics)
 
 
@@ -373,10 +360,8 @@ def run_all(args) -> Path:
                 summary_dir,
                 output_csv=robustness_csv,
             )
-            if not results.empty:
-                generate_robustness_figures(robustness_csv, robustness_dir)
-        if args.with_figures:
-            run_figure_subprocess(root_dir, summary_only=True)
+            if results.empty:
+                print("[Missing modality] No robustness rows were generated.")
 
     manifest["status"] = "finished"
     manifest["finished_at"] = datetime.now().isoformat(timespec="seconds")
@@ -412,8 +397,6 @@ def refresh_summary_from_existing(args) -> Path:
     write_summary_tables(rows, summary_dir)
     manifest["finished_at"] = datetime.now().isoformat(timespec="seconds")
     save_json(manifest, summary_dir / "experiment_manifest.json")
-    if args.with_figures:
-        run_figure_subprocess(root_dir, summary_only=True)
     return summary_dir
 
 
@@ -442,8 +425,7 @@ def build_argparser() -> argparse.ArgumentParser:
     parser.add_argument("--skip_existing", action="store_true")
     parser.add_argument("--stop_on_error", action="store_true")
     parser.add_argument("--run_missing", action="store_true")
-    parser.add_argument("--with_figures", action="store_true")
-    parser.add_argument("--refresh_summary_only", action="store_true", help="Scan existing test metrics and regenerate summary CSV/figures without training or testing.")
+    parser.add_argument("--refresh_summary_only", action="store_true", help="Scan existing test metrics and regenerate summary CSV without training or testing.")
     parser.add_argument("--no_amp", action="store_true")
     parser.add_argument("--no_class_weight", action="store_true")
     return parser

@@ -52,9 +52,8 @@ single_pz          Single Pz-Oz baseline
 single_eog         Single EOG baseline
 ```
 
-Internal CLI/checkpoint names stay lowercase, for example `sdgcf`. Figure
-titles, legends and report display names use the canonical paper name `SDGCF`.
-Cross-model summary and robustness figures are saved with the `sdgcf_` prefix.
+Internal CLI/checkpoint names stay lowercase, for example `sdgcf`. Report
+display names use the canonical paper name `SDGCF`.
 
 ## Quick Check
 
@@ -69,23 +68,10 @@ python main.py --model sdgcf --mode test --save_dir ./results_enhanced --device 
 python run_all_experiments.py --models all --epochs 30 --batch_size 128 --device auto
 ```
 
-To add or refresh comparison figures without retraining already completed
-models, first run only the missing comparison models, then rebuild the summary
-from saved metrics:
+To rebuild summary tables from saved metrics without retraining:
 
 ```bash
-python run_all_experiments.py --models random_forest,svm_linear,logistic_regression --root_dir ./all_experiment_results --skip_existing --with_figures --device cpu
-python run_all_experiments.py --root_dir ./all_experiment_results --refresh_summary_only --with_figures
-```
-
-Windows launchers:
-
-```text
-run_quick_debug_cpu.bat
-run_sdgcf_30pct_cpu.bat
-run_sdgcf_full_auto.bat
-run_sdgcf_tuning_30pct_cpu.bat
-run_full_pipeline.bat
+python run_all_experiments.py --root_dir ./all_experiment_results --refresh_summary_only
 ```
 
 ## Tuning
@@ -108,7 +94,6 @@ Each result folder contains:
 checkpoints/   best model checkpoint
 logs/          training history and summary
 metrics/       test metrics, predictions and graph attention matrices
-figures/       generated visualizations
 ```
 
 The simplified SDGCF architecture requires fresh checkpoints. Legacy
@@ -120,27 +105,11 @@ with the current model definition.
 Run missing-modality and noisy-modality tests for selected trained models:
 
 ```bash
-python generate_robustness_cli.py --root_dir ./all_experiment_results --models simple_concat,concat_transformer,multimodal_concat,sdgcf --device auto
+python run_all_experiments.py --root_dir ./all_experiment_results --run_missing --missing_models simple_concat,concat_transformer,multimodal_concat,sdgcf --device auto
 ```
 
-The standalone comparison CSV and figures are saved under:
+The comparison CSV is saved under:
 
 ```text
 all_experiment_results/summary_results/robustness_comparison/
 ```
-
-Use `--visualize_only` to regenerate figures from the existing CSV without
-rerunning model evaluation.
-
-On Windows, the same comparison can be started with:
-
-```bat
-run_robustness_comparison.bat
-```
-
-## Comparison-model Presets
-
-`concat_transformer` and `multimodal_concat` use architecture-aware training
-presets from `config.py`. The presets only adjust optimization and
-regularization parameters; they do not reduce the model dimensions. Explicit
-CLI arguments such as `--lr` and `--dropout` still override the presets.
